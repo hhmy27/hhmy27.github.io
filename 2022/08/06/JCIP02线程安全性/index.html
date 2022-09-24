@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="Ch02 线程安全性前置知识需要先了解一下Java的内存模型和线程，这个仓库讲得特别好，我这里就不赘述了，贴一下链接 Java-Concurrency-in-Practice&#x2F;00-Java内存模型.md at master · TangBean&#x2F;Java-Concurrency-in-Practice (github.com) Java-Concurrency-in-Practice&#x2F;01-Ja">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JCIP02线程安全性">
+<meta property="og:url" content="https://hhmy27.github.io/2022/08/06/JCIP02%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E6%80%A7/index.html">
+<meta property="og:site_name" content="hhmy27 的分享">
+<meta property="og:description" content="Ch02 线程安全性前置知识需要先了解一下Java的内存模型和线程，这个仓库讲得特别好，我这里就不赘述了，贴一下链接 Java-Concurrency-in-Practice&#x2F;00-Java内存模型.md at master · TangBean&#x2F;Java-Concurrency-in-Practice (github.com) Java-Concurrency-in-Practice&#x2F;01-Ja">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-08-06T17:45:09.000Z">
+<meta property="article:modified_time" content="2022-09-24T14:35:10.106Z">
+<meta property="article:author" content="hhmy27">
+<meta property="article:tag" content="hexo">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>JCIP02线程安全性</title>
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 5.4.1"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="القائمة"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="القائمة"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="الأعلى" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fas fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/about/">关于</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     --><!--
+       --><li><a target="_blank" rel="noopener" href="https://github.com/hhmy27">项目</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="上一篇" href="/2022/08/06/JCIP03%E5%AF%B9%E8%B1%A1%E7%9A%84%E5%85%B1%E4%BA%AB/"><i class="fas fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="下一篇" href="/2022/04/23/6s081-lab1/"><i class="fas fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="返回顶部" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="分享文章" href="#"><i class="fas fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">上一篇</span>
+      <span id="i-next" class="info" style="display:none;">下一篇</span>
+      <span id="i-top" class="info" style="display:none;">返回顶部</span>
+      <span id="i-share" class="info" style="display:none;">分享文章</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=https://hhmy27.github.io/2022/08/06/JCIP02%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E6%80%A7/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=https://hhmy27.github.io/2022/08/06/JCIP02%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E6%80%A7/&text=JCIP02线程安全性"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=https://hhmy27.github.io/2022/08/06/JCIP02%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E6%80%A7/&title=JCIP02线程安全性"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=https://hhmy27.github.io/2022/08/06/JCIP02%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E6%80%A7/&is_video=false&description=JCIP02线程安全性"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=JCIP02线程安全性&body=Check out this article: https://hhmy27.github.io/2022/08/06/JCIP02%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E6%80%A7/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=https://hhmy27.github.io/2022/08/06/JCIP02%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E6%80%A7/&title=JCIP02线程安全性"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=https://hhmy27.github.io/2022/08/06/JCIP02%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E6%80%A7/&title=JCIP02线程安全性"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=https://hhmy27.github.io/2022/08/06/JCIP02%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E6%80%A7/&title=JCIP02线程安全性"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=https://hhmy27.github.io/2022/08/06/JCIP02%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E6%80%A7/&title=JCIP02线程安全性"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=https://hhmy27.github.io/2022/08/06/JCIP02%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E6%80%A7/&name=JCIP02线程安全性&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=https://hhmy27.github.io/2022/08/06/JCIP02%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E6%80%A7/&t=JCIP02线程安全性"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Ch02-%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E6%80%A7"><span class="toc-number">1.</span> <span class="toc-text">Ch02 线程安全性</span></a></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index py4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        JCIP02线程安全性
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">hhmy27</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2022-08-06T17:45:09.000Z" itemprop="datePublished">2022-08-06</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fas fa-archive"></i>
+        <a class="category-link" href="/categories/blog/">blog</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fas fa-tag"></i>
+        <a class="tag-link-link" href="/tags/hexo/" rel="tag">hexo</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <h2 id="Ch02-线程安全性"><a href="#Ch02-线程安全性" class="headerlink" title="Ch02 线程安全性"></a>Ch02 线程安全性</h2><p>前置知识需要先了解一下Java的内存模型和线程，这个仓库讲得特别好，我这里就不赘述了，贴一下链接</p>
+<p><a target="_blank" rel="noopener" href="https://github.com/TangBean/Java-Concurrency-in-Practice/blob/master/Ch0-Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80/00-Java%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B.md">Java-Concurrency-in-Practice/00-Java内存模型.md at master · TangBean/Java-Concurrency-in-Practice (github.com)</a></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/TangBean/Java-Concurrency-in-Practice/blob/master/Ch0-Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80/01-Java%E7%BA%BF%E7%A8%8B.md">Java-Concurrency-in-Practice/01-Java线程.md at master · TangBean/Java-Concurrency-in-Practice (github.com)</a></p>
+<p>这一章主要是讲如何分析线程安全性，知识点比较细碎，我这里简单记录一下</p>
+<ul>
+<li>什么是线程安全性？</li>
+</ul>
+<p>当多个线程访问某个类的时候，这个类始终能表示正确的（符合预期的）行为，那么这个类就是线程安全的</p>
+<ul>
+<li>如何分析对象的线程安全性？</li>
+</ul>
+<p>我们从对象的状态入手</p>
+<ol>
+<li><p>无状态对象一定是线程安全的</p>
+<p>例如spring的无状态bean、一个不包含任何属性任何引用的servlet，这些都是无状态的对象。000</p>
+</li>
+<li><p>有状态对象需要看情况</p>
+<p>满足共享、可变的有状态对象是非线程安全的</p>
+<ol>
+<li>共享，即可以被多个线程访问</li>
+<li>可变，即类是可以读写的</li>
+</ol>
+</li>
+</ol>
+<ul>
+<li>如何保持线程安全性？</li>
+</ul>
+<p>经过上面的分析，我们可以破坏几个条件来保持线程安全性</p>
+<ol>
+<li><p>破坏共享条件</p>
+</li>
+<li><p>保持不可变状态</p>
+</li>
+<li><p>加锁，保证同步</p>
+<p>在java中，加锁的方式主要有 <code>synchronized</code>，<code>volatile</code>，<code>explicit lock</code>， 原子变量，前两个是java提供的关键字，后两个是JUC提供的方法和变量</p>
+</li>
+</ol>
+<ul>
+<li>什么是原子性？</li>
+</ul>
+<p>原子性指的是操作指令的完成性，当一个操作不能再分割的时候，就具有原子性</p>
+<p>提问：count+=1是原子性的操作吗？答案是No</p>
+<p>这一步实际上可以拆分为</p>
+<ol>
+<li>取出count</li>
+<li>计算count + 1的结果</li>
+<li>把count + 1的结果赋给count</li>
+</ol>
+<p>因此这个操作不是原子性的</p>
+<p>如果一个操作不具有原子性，那么它在高并发场景下可能会得到不正确的结果</p>
+<p>例如两个线程想要同时给count + 1，那么很有可能两个线程同时拿到count变量，然后计算+1的值赋给count，我们预计的结果是count+2，但实际上得到了count+1</p>
+<ul>
+<li>为什么不能保证原子性？</li>
+</ul>
+<p>这是因为现代计算机系统的设计，为了得到最高的cpu利用率，我们采用分时的调度，每个任务执行过程中随时可能会被中断，cpu交给其它任务占用，所以没办法保证每个任务里面的每条指令都是原子的，总会在某个时刻中断</p>
+<ul>
+<li>竞态条件（race condition）</li>
+</ul>
+<p>扩展：<a target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/article/1911969">竞态条件及其解决方法 - 腾讯云开发者社区-腾讯云 (tencent.com)</a></p>
+<p>（我觉得这里翻译有点怪，但是没想到更贴切的说法）</p>
+<p>定义：指的是多个线程并发执行时，其最终的结果依赖于执行的精确时序。</p>
+<p>竞态条件会可能出现不符合预期的结果，例如上面提到的count += 1，为了避免竞态条件，我们可以对临界区提供保护。</p>
+<p>常见的方法有加锁、或者使用原子类来保证变量的原子性</p>
+<p>（需要注意的是原子类不能保证组合情况下的原子性）</p>
+<ul>
+<li>java中的synchronized</li>
+</ul>
+<p>用法</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">synchronized</span>(obj)&#123;</span><br><span class="line">	<span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其中obj是作为锁的对象，代码块是被锁保护的区域</p>
+<p>syn可以作用于三个地方：静态方法、普通方法、代码块</p>
+<p><strong>静态方法</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">method</span><span class="params">()</span> &#123;</span><br><span class="line">   	<span class="comment">// todo</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 等同于锁住该类的Class对象</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">method</span><span class="params">()</span> &#123;</span><br><span class="line">   	<span class="comment">// todo</span></span><br><span class="line">    <span class="keyword">synchronized</span>(<span class="built_in">this</span>.Class)&#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>普通方法</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title function_">method</span><span class="params">()</span>&#123;</span><br><span class="line">   <span class="comment">// todo</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 等同于</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">method</span><span class="params">()</span>&#123;</span><br><span class="line">   <span class="comment">// todo</span></span><br><span class="line">   <span class="keyword">synchronized</span>(<span class="built_in">this</span>)&#123;</span><br><span class="line">       </span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>锁的用处：保证<strong>原子性</strong>和<strong>可见性</strong></p>
+<p>可见性指的是，一个线程对类的修改，对所有线程都是可见的</p>
+<ul>
+<li>锁的可重入性</li>
+</ul>
+<p>如果一个锁是可重入的，那么它允许一个线程多次的获取锁，实现原理是通过一个计数器判断当前重入次数，如果重入次数为0就表示该锁被线程释放了</p>
+<ul>
+<li>使用锁的基本原则</li>
+</ul>
+<p>如果某个变量需要同步，那么该变量需要锁<br>如果某个计算操作耗时久，那么不要加锁<br>我们尽量对锁的范围进行缩小，获取更细粒度的保护和更好的性能</p>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">首页</a></li>
+         
+          <li><a href="/about/">关于</a></li>
+         
+          <li><a href="/archives/">归档</a></li>
+         
+          <li><a target="_blank" rel="noopener" href="https://github.com/hhmy27">项目</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Ch02-%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E6%80%A7"><span class="toc-number">1.</span> <span class="toc-text">Ch02 线程安全性</span></a></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=https://hhmy27.github.io/2022/08/06/JCIP02%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E6%80%A7/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=https://hhmy27.github.io/2022/08/06/JCIP02%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E6%80%A7/&text=JCIP02线程安全性"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=https://hhmy27.github.io/2022/08/06/JCIP02%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E6%80%A7/&title=JCIP02线程安全性"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=https://hhmy27.github.io/2022/08/06/JCIP02%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E6%80%A7/&is_video=false&description=JCIP02线程安全性"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=JCIP02线程安全性&body=Check out this article: https://hhmy27.github.io/2022/08/06/JCIP02%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E6%80%A7/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=https://hhmy27.github.io/2022/08/06/JCIP02%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E6%80%A7/&title=JCIP02线程安全性"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=https://hhmy27.github.io/2022/08/06/JCIP02%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E6%80%A7/&title=JCIP02线程安全性"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=https://hhmy27.github.io/2022/08/06/JCIP02%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E6%80%A7/&title=JCIP02线程安全性"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=https://hhmy27.github.io/2022/08/06/JCIP02%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E6%80%A7/&title=JCIP02线程安全性"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=https://hhmy27.github.io/2022/08/06/JCIP02%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E6%80%A7/&name=JCIP02线程安全性&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=https://hhmy27.github.io/2022/08/06/JCIP02%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E6%80%A7/&t=JCIP02线程安全性"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fas fa-bars fa-lg" aria-hidden="true"></i> 菜单</a>
+        <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fas fa-list fa-lg" aria-hidden="true"></i> 目录</a>
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fas fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up fa-lg" aria-hidden="true"></i> 返回顶部</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2022
+    hhmy27
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/about/">关于</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     --><!--
+       --><li><a target="_blank" rel="noopener" href="https://github.com/hhmy27">项目</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+ 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script> 
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script> 
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"复制到粘贴板!\">";
+    btn += '<i class="far fa-clone"></i>';
+    btn += '</span>'; 
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "复制成功!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Google Analytics -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Umami Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>

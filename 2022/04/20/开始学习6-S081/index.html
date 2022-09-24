@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="简介想学这门课很久了，最近终于有时间了，这里整理一下资料和环境 资料首先是官网的schedule 6.S081 &#x2F; Fall 2020 (mit.edu) video我在b站看的 [6.S081 &#x2F; Fall 2020 麻省理工操作系统 - 2020 年秋季][中英文字幕]_哔哩哔哩_bilibili GitHub上对课程的翻译 简介 - MIT6.S081 (gitbook.io) 环境我的系统">
+<meta property="og:type" content="article">
+<meta property="og:title" content="开始学习6.S081">
+<meta property="og:url" content="https://hhmy27.github.io/2022/04/20/%E5%BC%80%E5%A7%8B%E5%AD%A6%E4%B9%A06-S081/index.html">
+<meta property="og:site_name" content="hhmy27 的分享">
+<meta property="og:description" content="简介想学这门课很久了，最近终于有时间了，这里整理一下资料和环境 资料首先是官网的schedule 6.S081 &#x2F; Fall 2020 (mit.edu) video我在b站看的 [6.S081 &#x2F; Fall 2020 麻省理工操作系统 - 2020 年秋季][中英文字幕]_哔哩哔哩_bilibili GitHub上对课程的翻译 简介 - MIT6.S081 (gitbook.io) 环境我的系统">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-04-20T14:16:59.000Z">
+<meta property="article:modified_time" content="2022-09-24T14:35:10.106Z">
+<meta property="article:author" content="hhmy27">
+<meta property="article:tag" content="6.S081">
+<meta property="article:tag" content="OS">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>开始学习6.S081</title>
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 5.4.1"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="القائمة"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="القائمة"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="الأعلى" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fas fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/about/">关于</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     --><!--
+       --><li><a target="_blank" rel="noopener" href="https://github.com/hhmy27">项目</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="上一篇" href="/2022/04/20/%E3%80%8AJAVA%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E5%AE%9E%E6%88%98%E3%80%8B%E7%AC%94%E8%AE%B0/"><i class="fas fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="下一篇" href="/2022/04/17/%E3%80%8A%E7%BD%91%E7%BB%9C%E6%98%AF%E6%80%8E%E6%A0%B7%E8%BF%9E%E6%8E%A5%E7%9A%84%E3%80%8B%E7%AC%94%E8%AE%B0/"><i class="fas fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="返回顶部" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="分享文章" href="#"><i class="fas fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">上一篇</span>
+      <span id="i-next" class="info" style="display:none;">下一篇</span>
+      <span id="i-top" class="info" style="display:none;">返回顶部</span>
+      <span id="i-share" class="info" style="display:none;">分享文章</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=https://hhmy27.github.io/2022/04/20/%E5%BC%80%E5%A7%8B%E5%AD%A6%E4%B9%A06-S081/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=https://hhmy27.github.io/2022/04/20/%E5%BC%80%E5%A7%8B%E5%AD%A6%E4%B9%A06-S081/&text=开始学习6.S081"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=https://hhmy27.github.io/2022/04/20/%E5%BC%80%E5%A7%8B%E5%AD%A6%E4%B9%A06-S081/&title=开始学习6.S081"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=https://hhmy27.github.io/2022/04/20/%E5%BC%80%E5%A7%8B%E5%AD%A6%E4%B9%A06-S081/&is_video=false&description=开始学习6.S081"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=开始学习6.S081&body=Check out this article: https://hhmy27.github.io/2022/04/20/%E5%BC%80%E5%A7%8B%E5%AD%A6%E4%B9%A06-S081/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=https://hhmy27.github.io/2022/04/20/%E5%BC%80%E5%A7%8B%E5%AD%A6%E4%B9%A06-S081/&title=开始学习6.S081"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=https://hhmy27.github.io/2022/04/20/%E5%BC%80%E5%A7%8B%E5%AD%A6%E4%B9%A06-S081/&title=开始学习6.S081"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=https://hhmy27.github.io/2022/04/20/%E5%BC%80%E5%A7%8B%E5%AD%A6%E4%B9%A06-S081/&title=开始学习6.S081"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=https://hhmy27.github.io/2022/04/20/%E5%BC%80%E5%A7%8B%E5%AD%A6%E4%B9%A06-S081/&title=开始学习6.S081"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=https://hhmy27.github.io/2022/04/20/%E5%BC%80%E5%A7%8B%E5%AD%A6%E4%B9%A06-S081/&name=开始学习6.S081&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=https://hhmy27.github.io/2022/04/20/%E5%BC%80%E5%A7%8B%E5%AD%A6%E4%B9%A06-S081/&t=开始学习6.S081"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AE%80%E4%BB%8B"><span class="toc-number">1.</span> <span class="toc-text">简介</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%B5%84%E6%96%99"><span class="toc-number">2.</span> <span class="toc-text">资料</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%8E%AF%E5%A2%83"><span class="toc-number">3.</span> <span class="toc-text">环境</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#lab%E5%87%86%E5%A4%87"><span class="toc-number"></span> <span class="toc-text">lab准备</span></a>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index py4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        开始学习6.S081
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">hhmy27</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2022-04-20T14:16:59.000Z" itemprop="datePublished">2022-04-20</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fas fa-archive"></i>
+        <a class="category-link" href="/categories/%E8%AF%BE%E7%A8%8B/">课程</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fas fa-tag"></i>
+        <a class="tag-link-link" href="/tags/6-S081/" rel="tag">6.S081</a>, <a class="tag-link-link" href="/tags/OS/" rel="tag">OS</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>想学这门课很久了，最近终于有时间了，这里整理一下资料和环境</p>
+<h2 id="资料"><a href="#资料" class="headerlink" title="资料"></a>资料</h2><p>首先是官网的schedule <a target="_blank" rel="noopener" href="https://pdos.csail.mit.edu/6.828/2020/schedule.html">6.S081 / Fall 2020 (mit.edu)</a></p>
+<p>video我在b站看的 [6.S081 / Fall 2020 <a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV19k4y1C7kA">麻省理工操作系统 - 2020 年秋季][中英文字幕]_哔哩哔哩_bilibili</a></p>
+<p>GitHub上对课程的翻译 <a target="_blank" rel="noopener" href="https://mit-public-courses-cn-translatio.gitbook.io/mit6-s081/">简介 - MIT6.S081 (gitbook.io)</a></p>
+<h2 id="环境"><a href="#环境" class="headerlink" title="环境"></a>环境</h2><p>我的系统是win 11，我用的是wsl2 + vscode的方式完成代码编写</p>
+<p>配置参考文章：<a target="_blank" rel="noopener" href="https://zhangjk98.xyz/6.S081-VSCode-prepare-and-kernel-debugging/">6.S081的调试和VSCode环境配置 | 止息的博客 (zhangjk98.xyz)</a></p>
+<p>官方的配置环境：<a target="_blank" rel="noopener" href="https://pdos.csail.mit.edu/6.828/2020/tools.html">6.S081 / Fall 2020 (mit.edu)</a></p>
+<p>我本机是WSL <a target="_blank" rel="noopener" href="https://blog.csdn.net/Leo_h1104/article/details/115580753">(10条消息) 使用WSL完成xv6-riscv实验_Leo_h1104的博客-CSDN博客</a></p>
+<p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/341805047">Fall2020/6.S081 实验笔记（〇） Lab0: Preparation - 知乎 (zhihu.com)</a></p>
+<p>git相关的配置：<a target="_blank" rel="noopener" href="https://hktkdy.com/2016/11/26/201611/git-clone/">git clone 之后才想要提交代码怎么办？ | 海阔天空的云 (hktkdy.com)</a></p>
+<p><a target="_blank" rel="noopener" href="https://codingnote-cc.translate.goog/zh-tw/p/215157/?_x_tr_sl=zh-TW&_x_tr_tl=zh-CN&_x_tr_hl=zh-CN&_x_tr_pto=sc">MIT 6.S081 xv6調試不完全指北 -  (codingnote-cc.translate.goog)</a></p>
+<h1 id="lab准备"><a href="#lab准备" class="headerlink" title="lab准备"></a>lab准备</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git clone git://g.csail.mit.edu/xv6-labs-2021</span><br></pre></td></tr></table></figure>
+
+<p>遇到的问题和这篇博客记录的一样</p>
+<p><a target="_blank" rel="noopener" href="https://www.xqmq.icu/posts/794fb150.html">为了 xv6 而连接两个远程 git 仓库 | xStack (xqmq.icu)</a></p>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">首页</a></li>
+         
+          <li><a href="/about/">关于</a></li>
+         
+          <li><a href="/archives/">归档</a></li>
+         
+          <li><a target="_blank" rel="noopener" href="https://github.com/hhmy27">项目</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AE%80%E4%BB%8B"><span class="toc-number">1.</span> <span class="toc-text">简介</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%B5%84%E6%96%99"><span class="toc-number">2.</span> <span class="toc-text">资料</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%8E%AF%E5%A2%83"><span class="toc-number">3.</span> <span class="toc-text">环境</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#lab%E5%87%86%E5%A4%87"><span class="toc-number"></span> <span class="toc-text">lab准备</span></a>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=https://hhmy27.github.io/2022/04/20/%E5%BC%80%E5%A7%8B%E5%AD%A6%E4%B9%A06-S081/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=https://hhmy27.github.io/2022/04/20/%E5%BC%80%E5%A7%8B%E5%AD%A6%E4%B9%A06-S081/&text=开始学习6.S081"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=https://hhmy27.github.io/2022/04/20/%E5%BC%80%E5%A7%8B%E5%AD%A6%E4%B9%A06-S081/&title=开始学习6.S081"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=https://hhmy27.github.io/2022/04/20/%E5%BC%80%E5%A7%8B%E5%AD%A6%E4%B9%A06-S081/&is_video=false&description=开始学习6.S081"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=开始学习6.S081&body=Check out this article: https://hhmy27.github.io/2022/04/20/%E5%BC%80%E5%A7%8B%E5%AD%A6%E4%B9%A06-S081/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=https://hhmy27.github.io/2022/04/20/%E5%BC%80%E5%A7%8B%E5%AD%A6%E4%B9%A06-S081/&title=开始学习6.S081"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=https://hhmy27.github.io/2022/04/20/%E5%BC%80%E5%A7%8B%E5%AD%A6%E4%B9%A06-S081/&title=开始学习6.S081"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=https://hhmy27.github.io/2022/04/20/%E5%BC%80%E5%A7%8B%E5%AD%A6%E4%B9%A06-S081/&title=开始学习6.S081"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=https://hhmy27.github.io/2022/04/20/%E5%BC%80%E5%A7%8B%E5%AD%A6%E4%B9%A06-S081/&title=开始学习6.S081"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=https://hhmy27.github.io/2022/04/20/%E5%BC%80%E5%A7%8B%E5%AD%A6%E4%B9%A06-S081/&name=开始学习6.S081&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=https://hhmy27.github.io/2022/04/20/%E5%BC%80%E5%A7%8B%E5%AD%A6%E4%B9%A06-S081/&t=开始学习6.S081"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fas fa-bars fa-lg" aria-hidden="true"></i> 菜单</a>
+        <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fas fa-list fa-lg" aria-hidden="true"></i> 目录</a>
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fas fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up fa-lg" aria-hidden="true"></i> 返回顶部</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2022
+    hhmy27
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/about/">关于</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     --><!--
+       --><li><a target="_blank" rel="noopener" href="https://github.com/hhmy27">项目</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+ 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script> 
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script> 
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"复制到粘贴板!\">";
+    btn += '<i class="far fa-clone"></i>';
+    btn += '</span>'; 
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "复制成功!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Google Analytics -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Umami Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>
