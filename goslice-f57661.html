@@ -24,9 +24,12 @@
     font-size: 20px;
   }
 </style>
-  <title>解析一下Go的Slice&nbsp;|&nbsp;Notablog</title>
+  <title>聊聊Go的slice&nbsp;|&nbsp;Notablog</title>
   <meta property="og:type" content="blog">
-  <meta property="og:title" content="解析一下Go的Slice">
+  <meta property="og:title" content="聊聊Go的slice">
+  
+    <meta name="description" content="通过源码分析slice的初始化和扩容机制">
+    <meta property="og:description" content="通过源码分析slice的初始化和扩容机制">
   
   
   <style>
@@ -62,6 +65,8 @@
     
   
     
+  
+    
       <span class="Navbar__Delim">&centerdot;</span>
       <a href="about.html">
         <div class="Navbar__Btn">
@@ -73,19 +78,226 @@
       </a>
     
   
-    
-  
 </nav>
   <header class="Header">
     
     <div class="Header__Spacer Header__Spacer--NoCover">
     </div>
     
-    <h1 class="Header__Title">解析一下Go的Slice</h1>
+    <h1 class="Header__Title">聊聊Go的slice</h1>
+    
+      <div class="DateTagBar">
+        
+          <span class="DateTagBar__Item DateTagBar__Date">Posted on Sun, Nov 20, 2022</span>
+        
+        
+      </div>
     
   </header>
-  <article id="https://www.notion.so/f57661f870a14ee6a86809224dcbb50a" class="PageRoot"><h1 id="https://www.notion.so/0f70d442d1cb496488a903fef7b3eedf" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--1"><a class="Anchor" href="#https://www.notion.so/0f70d442d1cb496488a903fef7b3eedf"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Slice源码</span></span></h1><div id="https://www.notion.so/9e4eaa94719343fbb21ab796eb50d9a7" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">切换到我们的go安装路径，输入</span></span></p></div><pre id="https://www.notion.so/ae09624b27564cb1b2df19546e9cfccc" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>$ grep -n &quot;type slice struct&quot; -r ./</span></span></span></code></pre><div id="https://www.notion.so/e0ee1f844f374a4b8260f85c1b31206e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">得到输出</span></span></p></div><pre id="https://www.notion.so/59ebe073f38d4d539002269f9be25ab1" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>.//src/cmd/compile/internal/gc/go.go:77:// type slice struct {
-.//src/runtime/slice.go:13:type slice struct {</span></span></span></code></pre><div id="https://www.notion.so/0c7a271107d54a4c9b7e75de8568e498" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">我们直接进</span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">slice.go</code></span><span class="SemanticString"> 这个文件看下</span></span></p></div><div id="https://www.notion.so/061795a47bb14c208518c1afcf5f82de" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><h1 id="https://www.notion.so/f432822761ce4d10ab7a753b0a927920" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--1"><a class="Anchor" href="#https://www.notion.so/f432822761ce4d10ab7a753b0a927920"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Ref</span></span></h1><div id="https://www.notion.so/a10944f9177743539ef252852c4654c5" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://www.wolai.com/enjoy/6QNWNJsW7Rckn6A8ZNzM1p">浅谈 Go 1.18.1的切片扩容机制 - Lookcos 的网络日志 (wolai.com)</a></span></span></p></div><div id="https://www.notion.so/16aa32c854a444eb9470c7ebd4978bdc" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://www.lookcos.cn/archives/1204.html">浅谈 Go 1.18.1的切片扩容机制 - Lookcos 的网络日志</a></span></span></p></div><div id="https://www.notion.so/9a40afd93c974d5f8c586d8aec1c6df8" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://halfrost.com/go_slice/">深入解析 Go 中 Slice 底层实现 (halfrost.com)</a></span></span></p></div><div id="https://www.notion.so/5037bfc16f134aff9b5d5051cdadaba3" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://tiancaiamao.gitbooks.io/go-internals/content/zh/02.2.html">slice · 深入解析Go (gitbooks.io)</a></span></span></p></div><div id="https://www.notion.so/710daca5a0e842abb0d6ee0d28418730" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div></article>
+  <article id="https://www.notion.so/f57661f870a14ee6a86809224dcbb50a" class="PageRoot"><ul id="https://www.notion.so/2d29f8c6e00842eab6a8e3b89e11802c" class="ColorfulBlock ColorfulBlock--ColorGray TableOfContents"><li class="TableOfContents__Item"><a href="#https://www.notion.so/88ccdf21bf6f4f47ad63bc6148b4eb77"><div style="margin-left:0px"><span class="SemanticStringArray"><span class="SemanticString">查看slice的源码</span></span></div></a></li><li class="TableOfContents__Item"><a href="#https://www.notion.so/aff44efa9edf4075ace3e737a7ef6760"><div style="margin-left:0px"><span class="SemanticStringArray"><span class="SemanticString">slice的初始化</span></span></div></a></li><li class="TableOfContents__Item"><a href="#https://www.notion.so/7149483c26e648448078c25c12f55502"><div style="margin-left:0px"><span class="SemanticStringArray"><span class="SemanticString">扩容机制</span></span></div></a></li><li class="TableOfContents__Item"><a href="#https://www.notion.so/025b0d83ec6647c6938e65ca7de8e317"><div style="margin-left:24px"><span class="SemanticStringArray"><span class="SemanticString">step 1. 步长</span></span></div></a></li><li class="TableOfContents__Item"><a href="#https://www.notion.so/d52828d112574c89b2bef839a0cdb5b4"><div style="margin-left:24px"><span class="SemanticStringArray"><span class="SemanticString">step 2. 内存对齐</span></span></div></a></li><li class="TableOfContents__Item"><a href="#https://www.notion.so/b8c14434cf3544dfaf77caad59eeb242"><div style="margin-left:24px"><span class="SemanticStringArray"><span class="SemanticString">总结</span></span></div></a></li><li class="TableOfContents__Item"><a href="#https://www.notion.so/137285dee42642fc9fe05156899476f7"><div style="margin-left:0px"><span class="SemanticStringArray"><span class="SemanticString">总结</span></span></div></a></li><li class="TableOfContents__Item"><a href="#https://www.notion.so/837a1ac1d40f4bb6be569b0a0c474503"><div style="margin-left:0px"><span class="SemanticStringArray"><span class="SemanticString">Ref</span></span></div></a></li></ul><h1 id="https://www.notion.so/88ccdf21bf6f4f47ad63bc6148b4eb77" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--1"><a class="Anchor" href="#https://www.notion.so/88ccdf21bf6f4f47ad63bc6148b4eb77"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">查看slice的源码</span></span></h1><div id="https://www.notion.so/463196f2e0df4e8ba9130f80d8ae3783" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">查看go的版本</span></span></p></div><pre id="https://www.notion.so/3f6960b1cb3c40b2972cbca4fdec9b1d" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>$ go version
+go version go1.16.15 darwin/arm64</span></span></span></code></pre><div id="https://www.notion.so/9e4eaa94719343fbb21ab796eb50d9a7" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">切换到我们的go安装路径，输入</span></span></p></div><pre id="https://www.notion.so/ae09624b27564cb1b2df19546e9cfccc" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>$ grep -n &quot;type slice struct&quot; -r ./</span></span></span></code></pre><div id="https://www.notion.so/e0ee1f844f374a4b8260f85c1b31206e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">得到输出</span></span></p></div><pre id="https://www.notion.so/59ebe073f38d4d539002269f9be25ab1" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>.//src/cmd/compile/internal/gc/go.go:77:// type slice struct {
+.//src/runtime/slice.go:13:type slice struct {</span></span></span></code></pre><div id="https://www.notion.so/0c7a271107d54a4c9b7e75de8568e498" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">我们直接进</span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">slice.go</code></span><span class="SemanticString"> 这个文件看下</span></span></p></div><div id="https://www.notion.so/c51c915eb9024192bc791eba01ee0286" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">算上注释也就300行不到的代码，短小精悍，看看定义和函数列表</span></span></p></div><div id="https://www.notion.so/4a491e20e8004ceea0f6b874ee5c4b7c" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fs3-us-west-2.amazonaws.com%2Fsecure.notion-static.com%2Fc570d58b-7992-4cca-b1c1-ad9aea894226%2FUntitled.png?width=978&amp;table=block&amp;id=4a491e20-e800-4cee-a0f6-b874ee5c4b7c"><img src="https://www.notion.so/signed/https%3A%2F%2Fs3-us-west-2.amazonaws.com%2Fsecure.notion-static.com%2Fc570d58b-7992-4cca-b1c1-ad9aea894226%2FUntitled.png?width=978&amp;table=block&amp;id=4a491e20-e800-4cee-a0f6-b874ee5c4b7c" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/061795a47bb14c208518c1afcf5f82de" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">结构体定义</span></span></p></div><pre id="https://www.notion.so/a70ea14029d54267a5fd4ee51d16df2b" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>type slice struct {
+	array unsafe.Pointer    // 底层数组
+	len   int               // 数组长度
+	cap   int               // 数组容量
+}</span></span></span></code></pre><div id="https://www.notion.so/f432822761ce4d10ab7a753b0a927920" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">slice是在底层的数组上面包了一层，array是指向底层数组的指针，底层数组是真正存储值的地方。而len和cap和分别表示数组当前长度和数组的容量，slice根据它们的大小关系来进行扩容。</span></span></p></div><h1 id="https://www.notion.so/aff44efa9edf4075ace3e737a7ef6760" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--1"><a class="Anchor" href="#https://www.notion.so/aff44efa9edf4075ace3e737a7ef6760"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">slice的初始化</span></span></h1><div id="https://www.notion.so/b63dd47726f44b149d35059c30bbb89c" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">我们初始化一个slice，可以有两种方法，分别是：</span></span></p></div><pre id="https://www.notion.so/6197dcc375bd40438083b101c41cbd1f" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>make([]int, 5)    // 初始化size为5，cap为5的slice
+make([]int, 0, 5) // 初始化size为0，cap为5的slice，推荐使用该方式</span></span></span></code></pre><div id="https://www.notion.so/53d2ef4df1df4f7b8d7db6d18742ad18" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">对于slice来说，make的第一个参数指定存储类型，这里是</span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">int</code></span><span class="SemanticString">，第二个是size，可选为0，第三个是cap，指定容量</span></span></p></div><div id="https://www.notion.so/60f8c79654b04a319ec2484bd6021452" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">我们一般推荐使用第二种方式，指定好cap，避免扩容带来的开销，而size我们一般指定为0，表示不存储任何元素。</span></span></p></div><div id="https://www.notion.so/660d984b7463430d9e24829a5a5d7ecd" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">如果我们指定了size，那么会在生成size个默认值在slice中，比如说int类型的默认值就是0。请看下面的打印结果</span></span></p></div><pre id="https://www.notion.so/60a21e856acc49a9a7f12d04cd10687e" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>func TestSlice(t *testing.T) {
+	a := make([]int, 5)
+	for i := 1; i &lt;= 5; i++ {
+		a = append(a, i)
+	}
+	b := make([]int, 0, 10)
+	for i := 1; i &lt;= 5; i++ {
+		b = append(b, i)
+	}
+	fmt.Println(a, len(a), cap(a))
+	fmt.Println(b, len(b), cap(b))
+}
+
+// 输出
+// [0 0 0 0 0 1 2 3 4 5] 10 10
+// [1 2 3 4 5] 5 10</span></span></span></code></pre><div id="https://www.notion.so/b5e6c6442ba4462b85246259bc751ab2" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">用</span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">make([]int, size)</code></span><span class="SemanticString"> 方式初始化，很容易忘记我们已经存储了若干个值了。除非我们真的需要这样的slice，不然还是用第二种初始化方式比较好。</span></span></p></div><div id="https://www.notion.so/2f8de26d12e548aba3d8bc3591379c93" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">下面我们看看初始化的源码：</span></span></p></div><pre id="https://www.notion.so/b11c4f0d4bcb45f59ec4e09793270a1c" class="Code"><code><span class="SemanticStringArray"><span class="SemanticString"><span>func makeslice(et *_type, len, cap int) unsafe.Pointer {
+	mem, overflow := math.MulUintptr(et.size, uintptr(cap))
+	if overflow || mem &gt; maxAlloc || len &lt; 0 || len &gt; cap {
+		// NOTE: Produce a &#x27;len out of range&#x27; error instead of a
+		// &#x27;cap out of range&#x27; error when someone does make([]T, bignumber).
+		// &#x27;cap out of range&#x27; is true too, but since the cap is only being
+		// supplied implicitly, saying len is clearer.
+		// See golang.org/issue/4085.
+		mem, overflow := math.MulUintptr(et.size, uintptr(len))
+		if overflow || mem &gt; maxAlloc || len &lt; 0 {
+			panicmakeslicelen()
+		}
+		panicmakeslicecap()
+	}
+
+	return mallocgc(mem, et, true)
+}</span></span></span></code></pre><div id="https://www.notion.so/0577cb3215044261b1068675b26f037c" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">外部的逻辑是检查我们开的容量会不会溢出，如果溢出就抛出panic，否则的话调用</span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">mallocgc</code></span><span class="SemanticString"> 进行初始化，mallocgc的源码涉及到一些go内存分配的知识，这里就不展开了，感兴趣可以自己看看。</span></span></p></div><h1 id="https://www.notion.so/7149483c26e648448078c25c12f55502" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--1"><a class="Anchor" href="#https://www.notion.so/7149483c26e648448078c25c12f55502"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">扩容机制</span></span></h1><h2 id="https://www.notion.so/025b0d83ec6647c6938e65ca7de8e317" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--2"><a class="Anchor" href="#https://www.notion.so/025b0d83ec6647c6938e65ca7de8e317"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">step 1. 步长</span></span></h2><div id="https://www.notion.so/c52c259b7482411f8bcd37642f67c379" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">当我们len超过cap的时候就会触发扩容，实际调用的函数是</span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">growslice</code></span><span class="SemanticString">，我们来看看go是怎么实现的</span></span></p></div><pre id="https://www.notion.so/87b9ced668dc49b99513b4d2eb262045" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>// growslice handles slice growth during append.
+// It is passed the slice element type, the old slice, and the desired new minimum capacity,
+// and it returns a new slice with at least that capacity, with the old data
+// copied into it.
+// The new slice&#x27;s length is set to the old slice&#x27;s length,
+// NOT to the new requested capacity.
+// This is for codegen convenience. The old slice&#x27;s length is used immediately
+// to calculate where to write new values during an append.
+// TODO: When the old backend is gone, reconsider this decision.
+// The SSA backend might prefer the new length or to return only ptr/cap and save stack space.
+func growslice(et *_type, old slice, cap int) slice {
+	...
+	
+	newcap := old.cap
+		doublecap := newcap + newcap
+		if cap &gt; doublecap {
+			newcap = cap
+		} else {
+			if old.cap &lt; 1024 {
+				newcap = doublecap
+			} else {
+				// Check 0 &lt; newcap to detect overflow
+				// and prevent an infinite loop.
+				for 0 &lt; newcap &amp;&amp; newcap &lt; cap {
+					newcap += newcap / 4
+				}
+				// Set newcap to the requested cap when
+				// the newcap calculation overflowed.
+				if newcap &lt;= 0 {
+					newcap = cap
+				}
+			}
+		}
+	...
+}</span></span></span></code></pre><div><div></div><div></div><div></div><div></div><div></div></div><div id="https://www.notion.so/bb427629553644aaa86ee84a7aed2754" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">决策逻辑：</span></span></p></div><ul class="BulletedListWrapper"><li id="https://www.notion.so/21a0e612ef7e41a790da4a10ec8b1572" class="BulletedList"><span class="SemanticStringArray"><span class="SemanticString">如果期望容量超过当前容量的两倍，直接设置为期望容量，否则</span></span></li><li id="https://www.notion.so/440c25b24e17458cb86182d3fdada1e7" class="BulletedList"><span class="SemanticStringArray"><span class="SemanticString">如果当前容量的值小于1024，直接翻倍，否则</span></span></li><li id="https://www.notion.so/3e194dc75173407f8995fb332d232f22" class="BulletedList"><span class="SemanticStringArray"><span class="SemanticString">如果newcap &lt; cap，不断以1.25倍的速度增长</span></span></li></ul><div id="https://www.notion.so/c47133eccee149c28140bc11ecf2bcfe" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fs3-us-west-2.amazonaws.com%2Fsecure.notion-static.com%2Fb8eced42-e046-4d89-894b-f3331bc1b6e5%2FUntitled.png?width=2796&amp;table=block&amp;id=c47133ec-cee1-49c2-8140-bc11ecf2bcfe"><img src="https://www.notion.so/signed/https%3A%2F%2Fs3-us-west-2.amazonaws.com%2Fsecure.notion-static.com%2Fb8eced42-e046-4d89-894b-f3331bc1b6e5%2FUntitled.png?width=2796&amp;table=block&amp;id=c47133ec-cee1-49c2-8140-bc11ecf2bcfe" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2707e1ef5946417597424152c830c798" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/74cf82871c47494587233389fd8a758d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">对于1.25倍扩增速度，go的1.18.1版本作出了优化</span></span></p></div><pre id="https://www.notion.so/69807686ca994908add755fdf6d7cb76" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>func growslice(et *_type, old slice, cap int) slice {
+	...	
+	newcap := old.cap
+	doublecap := newcap + newcap
+	if cap &gt; doublecap {
+			newcap = cap
+	} else {
+			const threshold = 256
+			if old.cap &lt; threshold {
+					newcap = doublecap
+			} else {
+					// Check 0 &lt; newcap to detect overflow
+					// and prevent an infinite loop.
+					for 0 &lt; newcap &amp;&amp; newcap &lt; cap {
+							// Transition from growing 2x for small slices
+							// to growing 1.25x for large slices. This formula
+							// gives a smooth-ish transition between the two.
+							newcap += (newcap + 3*threshold) / 4
+					}
+					// Set newcap to the requested cap when
+					// the newcap calculation overflowed.
+					if newcap &lt;= 0 {
+							newcap = cap
+					}
+			}
+	}
+	...
+}</span></span></span></code></pre><div id="https://www.notion.so/d19a31e1851f4751bbda4246fb6d3685" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">这里的区别就是</span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">newcap += (newcap + 3*threshold) / 4</code></span><span class="SemanticString"> ，注释上说相比于旧版本，这里增长速度更加smooth，具体效果可以用python画图模拟一下，这里就不展开了。
+</span></span></p></div><div id="https://www.notion.so/aa5fb7ecc52247a5a2fdca2774697887" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">下面我们来看一段代码，看看结果是不是和我们上面分析得一样</span></span></p></div><pre id="https://www.notion.so/1fb7b43b185c46dda1088e166f714aad" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>func TestSlice(t *testing.T) {
+	c := make([]int, 0, 2)
+	// 此时c满
+	c = append(c, 1, 2)
+	// 此时按照计算公式，期望容量为5，当前容量为2，则c的最终容量是5
+	c = append(c, 3, 4, 5)
+	// 猜测为5 5
+	fmt.Println(len(c), cap(c))
+}</span></span></span></code></pre><div id="https://www.notion.so/9526dd2e11d0498db500447f9203c354" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">但是输出结果是</span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">5 6</code></span><span class="SemanticString">，cap被设置成了6，这是为什么呢？原因是go还会进行内存对齐</span></span></p></div><h2 id="https://www.notion.so/d52828d112574c89b2bef839a0cdb5b4" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--2"><a class="Anchor" href="#https://www.notion.so/d52828d112574c89b2bef839a0cdb5b4"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">step 2. 内存对齐</span></span></h2><pre id="https://www.notion.so/ed5bf066b1ab483a89dadf6310affd98" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>func growslice(et *_type, old slice, cap int) slice {
+	...
+
+	newcap := old.cap
+	doublecap := newcap + newcap
+	if cap &gt; doublecap {
+		newcap = cap
+	} else {
+		if old.cap &lt; 1024 {
+			newcap = doublecap
+		} else {
+			// Check 0 &lt; newcap to detect overflow
+			// and prevent an infinite loop.
+			for 0 &lt; newcap &amp;&amp; newcap &lt; cap {
+				newcap += newcap / 4
+			}
+			// Set newcap to the requested cap when
+			// the newcap calculation overflowed.
+			if newcap &lt;= 0 {
+				newcap = cap
+			}
+		}
+	}
+
+	var overflow bool
+	var lenmem, newlenmem, capmem uintptr
+	// Specialize for common values of et.size.
+	// For 1 we don&#x27;t need any division/multiplication.
+	// For sys.PtrSize, compiler will optimize division/multiplication into a shift by a constant.
+	// For powers of 2, use a variable shift.
+	switch {
+	case et.size == 1:
+		...
+	case et.size == sys.PtrSize:
+		...
+	case isPowerOfTwo(et.size):
+		var shift uintptr
+		if sys.PtrSize == 8 {
+			// Mask shift for better code generation.
+			shift = uintptr(sys.Ctz64(uint64(et.size))) &amp; 63
+		} else {
+			shift = uintptr(sys.Ctz32(uint32(et.size))) &amp; 31
+		}
+		lenmem = uintptr(old.len) &lt;&lt; shift
+		newlenmem = uintptr(cap) &lt;&lt; shift
+		capmem = roundupsize(uintptr(newcap) &lt;&lt; shift)
+		overflow = uintptr(newcap) &gt; (maxAlloc &gt;&gt; shift)
+		newcap = int(capmem &gt;&gt; shift)
+	default:
+		...
+	}
+	...
+
+	return slice{p, old.len, newcap}
+}</span></span></span></code></pre><div id="https://www.notion.so/3cb19bdcc0f3438d9bca5b29a6e72acc" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">et.size指的是存储元素类型的大小，这里int类型字节是8，使用下面的函数判断通过</span></span></p></div><pre id="https://www.notion.so/5f0cbc7454e04f52a868f50fc3c01e7f" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>func isPowerOfTwo(x uintptr) bool {
+	return x&amp;(x-1) == 0
+}</span></span></span></code></pre><div id="https://www.notion.so/ed3976ce309a430a9af8624bd3471f59" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">先不看代码，我们分析一下怎么内存对齐：</span></span></p></div><div id="https://www.notion.so/27dbee5fa7aa4077ae2cd03a4a07c673" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">我们的slice现在存储了5个元素，int类型8个字节，则新的存储容量大小</span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">newcap = 5 * 8 = 40</code></span><span class="SemanticString">，但是为了更好的内存分配减少碎片，go使用了和c一样的内存对齐策略，使用</span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">roundupsize</code></span><span class="SemanticString"> 把容量设置为大于它的第一个二次n次幂的数，这里符合的数就是48了，那么最终的</span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">cap = 48 / 8 = 6</code></span><span class="SemanticString">，所以在上面的例子cap被设置为了6</span></span></p></div><div id="https://www.notion.so/0c3bb5853eef40cfa21c3e1e020fc3f4" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">至于怎么设置的呢，这里有两个很巧妙的函数 </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">Ctz64</code></span><span class="SemanticString"> 和 </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">roundupsize</code></span></span></p></div><pre id="https://www.notion.so/358c7db0616a4c7b88e61061c8de2787" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>// Ctz64 counts trailing (low-order) zeroes,
+// and if all are zero, then 64.
+// 返回x中末尾0的个数
+func Ctz64(x uint64) int {
+	x &amp;= -x                       // isolate low-order bit
+	y := x * deBruijn64ctz &gt;&gt; 58  // extract part of deBruijn sequence
+	i := int(deBruijnIdx64ctz[y]) // convert to bit index
+	z := int((x - 1) &gt;&gt; 57 &amp; 64)  // adjustment if zero
+	return i + z
+}
+
+// 调整到第一个大于size的2的n次幂
+func roundupsize(size uintptr) uintptr {
+	if size &lt; _MaxSmallSize {
+		if size &lt;= smallSizeMax-8 {
+			return uintptr(class_to_size[size_to_class8[divRoundUp(size, smallSizeDiv)]])
+		} else {
+			return uintptr(class_to_size[size_to_class128[divRoundUp(size-smallSizeMax, largeSizeDiv)]])
+		}
+	}
+	if size+_PageSize &lt; size {
+		return size
+	}
+	return alignUp(size, _PageSize)
+}
+
+// alignUp rounds n up to a multiple of a. a must be a power of 2.
+func alignUp(n, a uintptr) uintptr {
+	return (n + a - 1) &amp;^ (a - 1)
+}
+// &amp;^ 是 ANT NOT 运算符</span></span></span></code></pre><div id="https://www.notion.so/71f22d56f6574fca930236b68f3035e9" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">然后我们再看这一块代码</span></span></p></div><pre id="https://www.notion.so/7b8eecd569c745d5b2e06fee1266a5ad" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>	case isPowerOfTwo(et.size):
+		var shift uintptr
+		if sys.PtrSize == 8 {
+			// Mask shift for better code generation.
+			shift = uintptr(sys.Ctz64(uint64(et.size))) &amp; 63
+		} else {
+			shift = uintptr(sys.Ctz32(uint32(et.size))) &amp; 31
+		}
+		capmem = roundupsize(uintptr(newcap) &lt;&lt; shift)
+		newcap = int(capmem &gt;&gt; shift)</span></span></span></code></pre><div id="https://www.notion.so/70f706d801f04eda9280b4344197685a" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">首先我们通过</span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">Ctz64(et.size)</code></span><span class="SemanticString"> 得到shift的值，int类型是8个字节，则8的二进制末尾有3个0，我们得到</span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">shift=3</code></span></span></p></div><div id="https://www.notion.so/87a381f31aae42f78784d090e911e095" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">然后</span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">newcap&lt;&lt;shift</code></span><span class="SemanticString"> 就是 </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">5 &lt;&lt; 3</code></span><span class="SemanticString"> 得到40</span></span></p></div><div id="https://www.notion.so/9b110d56197a40c7ba065ce3535cdc5e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">经过</span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">roundupsize</code></span><span class="SemanticString">，得到</span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">capmem = 48</code></span></span></p></div><div id="https://www.notion.so/5bf98707f14544ddb5c330b0886d2ab8" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">最终再还原回来 </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">newcap = int(48 &gt;&gt; 3) = 6</code></span></span></p></div><div id="https://www.notion.so/461d735a847b43ecbdf4951e7e4f5f4f" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">这样就能内存对齐啦</span></span></p></div><h2 id="https://www.notion.so/b8c14434cf3544dfaf77caad59eeb242" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--2"><a class="Anchor" href="#https://www.notion.so/b8c14434cf3544dfaf77caad59eeb242"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">总结</span></span></h2><div id="https://www.notion.so/0c99766c491040bb9bc559670651e3e3" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">slice的扩容步骤有两步</span></span></p></div><ol class="NumberedListWrapper"><li id="https://www.notion.so/a7ccb892d0c549b099b4932070417ec7" class="NumberedList" value="1"><span class="SemanticStringArray"><span class="SemanticString">调整期望容量</span></span><ol class="NumberedListWrapper"><li id="https://www.notion.so/f94175d27de9477aae84e09f2799913e" class="NumberedList" value="1"><span class="SemanticStringArray"><span class="SemanticString">如果期望容量是当前容量的两倍，直接更新，否则</span></span></li><li id="https://www.notion.so/494d5db1f6d3417c9434c0c9b4bf22c9" class="NumberedList" value="2"><span class="SemanticStringArray"><span class="SemanticString">如果小于1024，直接翻倍当前容量，否则</span></span></li><li id="https://www.notion.so/7cc654cb7ea34812b73b5fd5df139c03" class="NumberedList" value="3"><span class="SemanticStringArray"><span class="SemanticString">当前容量按照1.25的速度增长，直到超过期望容量</span></span></li></ol></li><li id="https://www.notion.so/c2d6abc51cda479288835df6ccb5f957" class="NumberedList" value="2"><span class="SemanticStringArray"><span class="SemanticString">进行内存对齐，向上调整到最接近的2的n次幂</span></span></li></ol><div id="https://www.notion.so/3f849047d9374242ab4c315880d84454" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/92262c263f3c40a7893dde27f63f6bf9" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">一些问题</strong></span></span></p></div><ul class="BulletedListWrapper"><li id="https://www.notion.so/9de25fdd99674bd39fb4eb57a4334608" class="BulletedList"><span class="SemanticStringArray"><span class="SemanticString">为什么1024之后的扩展速度变为1.25倍呢？</span></span></li></ul><div id="https://www.notion.so/30c45ff5c38642858938963d17afce4e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">因为内存空间很宝贵，底层的数组是在内存中连续的空间，申请这样大规模连续的空间是很昂贵的，1024之后我们用1.25的速度扩展已经足够大了，这样相比于翻倍扩展能解决更多的空间</span></span></p></div><ul class="BulletedListWrapper"><li id="https://www.notion.so/516c2057f89140cd9af7ab01a16516c8" class="BulletedList"><span class="SemanticStringArray"><span class="SemanticString">为什么要内存对齐？</span></span></li></ul><div id="https://www.notion.so/b2047ea3d6394300b9b96005894738a8" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">性能原因：内存对齐后，起点都是2的n次幂，cpu一次访问就能获取到数据，如果没有对齐，需要两次访问来处理对齐和运算才能拿到数据</span></span></p></div><div id="https://www.notion.so/5aace08d19aa4964ab89cf96757c7d5c" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">移植性：有一些硬件平台不支持任意位置访问</span></span></p></div><h1 id="https://www.notion.so/137285dee42642fc9fe05156899476f7" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--1"><a class="Anchor" href="#https://www.notion.so/137285dee42642fc9fe05156899476f7"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">总结</span></span></h1><div id="https://www.notion.so/efe1a331bfea4da0aa553970ae04e610" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">简单分析了一下slice的代码，短小精悍，主要有初始化和扩容两个操作。</span></span></p></div><div id="https://www.notion.so/8d4278e2f4214ba6aea2cf32eb8bb3df" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">日常使用的时候，我们最好指定cap的上限，避免扩容带来的开销</span></span></p></div><h1 id="https://www.notion.so/837a1ac1d40f4bb6be569b0a0c474503" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--1"><a class="Anchor" href="#https://www.notion.so/837a1ac1d40f4bb6be569b0a0c474503"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Ref</span></span></h1><div id="https://www.notion.so/16aa32c854a444eb9470c7ebd4978bdc" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://www.lookcos.cn/archives/1204.html">浅谈 Go 1.18.1的切片扩容机制 - Lookcos 的网络日志</a></span></span></p></div><div id="https://www.notion.so/9a40afd93c974d5f8c586d8aec1c6df8" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://halfrost.com/go_slice/">深入解析 Go 中 Slice 底层实现 (halfrost.com)</a></span></span></p></div><div id="https://www.notion.so/5037bfc16f134aff9b5d5051cdadaba3" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://tiancaiamao.gitbooks.io/go-internals/content/zh/02.2.html">slice · 深入解析Go (gitbooks.io)</a></span></span></p></div><div id="https://www.notion.so/710daca5a0e842abb0d6ee0d28418730" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="http://lifegoeson.cn/2022/01/22/golang%20slice%E6%89%A9%E5%AE%B9%E6%9C%BA%E5%88%B6/">golang slice扩容机制 (lifegoeson.cn)</a></span></span></p></div><div id="https://www.notion.so/132b9649cb624ef6954d53565900f381" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://eddycjy.gitbook.io/golang/di-1-ke-za-tan/go-memory-align">1.5 在 Go 中恰到好处的内存对齐 - 跟煎鱼学 Go (gitbook.io)</a></span></span></p></div><div id="https://www.notion.so/4df9adceffed414bb3bbd3b517f05d1b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://zhuanlan.zhihu.com/p/86765504">go：&amp;^ 运算符 - 知乎 (zhihu.com)</a></span></span></p></div><div id="https://www.notion.so/a7c08b041d344c9ba3fb6d96d6c9e468" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div></article>
   <footer class="Footer">
   <div>&copy; Notablog 2022</div>
   <div>&centerdot;</div>
