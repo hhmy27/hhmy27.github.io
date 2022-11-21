@@ -71,9 +71,14 @@ body {
 /* Common */
 
 .Header,
-.PageRoot,
-.ArticleList {
+.PageRoot{
   width: 1200px;
+  max-width: 100%;
+  margin: 0px auto;
+  padding: 0px 96px;
+}
+.ArticleList{
+  width: 900px;
   max-width: 100%;
   margin: 0px auto;
   padding: 0px 96px;
