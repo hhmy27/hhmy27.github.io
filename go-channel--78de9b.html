@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- iOS Safari -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<!-- Chrome, Firefox OS and Opera Status Bar Color -->
+<meta name="theme-color" content="#FFFFFF">
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css">
+<link rel="stylesheet" type="text/css"
+  href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.19.0/themes/prism.min.css">
+<link rel="stylesheet" type="text/css" href="css/SourceSansPro.css">
+<link rel="stylesheet" type="text/css" href="css/theme.css">
+<link rel="stylesheet" type="text/css" href="css/notablog.css">
+<!-- Favicon -->
+
+  <link rel="shortcut icon" href="data:image/svg+xml,&lt;svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22&gt;&lt;text text-anchor=%22middle%22 dominant-baseline=%22middle%22 x=%2250%22 y=%2255%22 font-size=%2280%22&gt;📖&lt;/text&gt;&lt;/svg&gt;">
+
+<style>
+  :root {
+    font-size: 20px;
+  }
+</style>
+  <title>Go channel 小结&nbsp;|&nbsp;Notablog</title>
+  <meta property="og:type" content="blog">
+  <meta property="og:title" content="Go channel 小结">
+  
+  
+  <style>
+    .DateTagBar {
+      margin-top: 1.0rem;
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="Navbar">
+  <a href="index.html">
+    <div class="Navbar__Btn">
+      
+        <span><img class="inline-img-icon" src="data:image/svg+xml,&lt;svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22&gt;&lt;text text-anchor=%22middle%22 dominant-baseline=%22middle%22 x=%2250%22 y=%2255%22 font-size=%2280%22&gt;📖&lt;/text&gt;&lt;/svg&gt;"></span>&nbsp;
+      
+      <span>Home</span>
+    </div>
+  </a>
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+      <span class="Navbar__Delim">&centerdot;</span>
+      <a href="about.html">
+        <div class="Navbar__Btn">
+          
+            <span><img class="inline-img-icon" src="data:image/svg+xml,&lt;svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22&gt;&lt;text text-anchor=%22middle%22 dominant-baseline=%22middle%22 x=%2250%22 y=%2255%22 font-size=%2280%22&gt;😀&lt;/text&gt;&lt;/svg&gt;"></span>&nbsp;
+          
+          <span>关于我</span>
+        </div>
+      </a>
+    
+  
+    
+  
+    
+  
+    
+  
+</nav>
+  <header class="Header">
+    
+    <div class="Header__Spacer Header__Spacer--NoCover">
+    </div>
+    
+    <h1 class="Header__Title">Go channel 小结</h1>
+    
+      <div class="DateTagBar">
+        
+          <span class="DateTagBar__Item DateTagBar__Date">Posted on Tue, Nov 29, 2022</span>
+        
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--pink">
+            <a href="tag/Go.html">Go</a>
+          </span>
+        
+      </div>
+    
+  </header>
+  <article id="https://www.notion.so/78de9b6e8102400489f6fe81e2fc5363" class="PageRoot"><ul id="https://www.notion.so/c98cf749b37d40719b4a1c01732f3021" class="ColorfulBlock ColorfulBlock--ColorGray TableOfContents"><li class="TableOfContents__Item"><a href="#https://www.notion.so/90690a9e0df247a7aef73ae953624c67"><div style="margin-left:0px"><span class="SemanticStringArray"><span class="SemanticString">简介</span></span></div></a></li><li class="TableOfContents__Item"><a href="#https://www.notion.so/6c9f0a079541462db11a00fada9e3969"><div style="margin-left:0px"><span class="SemanticStringArray"><span class="SemanticString">初始化</span></span></div></a></li><li class="TableOfContents__Item"><a href="#https://www.notion.so/57342cba1e6b480abfe0d218bdf31d01"><div style="margin-left:0px"><span class="SemanticStringArray"><span class="SemanticString">channel 的使用</span></span></div></a></li><li class="TableOfContents__Item"><a href="#https://www.notion.so/e4d3d196c9af4e668babb511f4673d98"><div style="margin-left:24px"><span class="SemanticStringArray"><span class="SemanticString">遍历</span></span></div></a></li><li class="TableOfContents__Item"><a href="#https://www.notion.so/c4e39751adae46e5a2178a09bb7cf92e"><div style="margin-left:24px"><span class="SemanticStringArray"><span class="SemanticString">select</span></span></div></a></li><li class="TableOfContents__Item"><a href="#https://www.notion.so/3a1d7f8ace3b40c6b1913852f126e673"><div style="margin-left:24px"><span class="SemanticStringArray"><span class="SemanticString">通道的限制</span></span></div></a></li><li class="TableOfContents__Item"><a href="#https://www.notion.so/e7f29620d1ac4e8f855a7e5ded4335b1"><div style="margin-left:24px"><span class="SemanticStringArray"><span class="SemanticString">通道的关闭和异常</span></span></div></a></li><li class="TableOfContents__Item"><a href="#https://www.notion.so/c84cfefbf8ca4a96bd46fe50c45a897a"><div style="margin-left:0px"><span class="SemanticStringArray"><span class="SemanticString">源码分析</span></span></div></a></li><li class="TableOfContents__Item"><a href="#https://www.notion.so/20ded407864f4db1b7509688e9332926"><div style="margin-left:0px"><span class="SemanticStringArray"><span class="SemanticString">Ref</span></span></div></a></li></ul><h1 id="https://www.notion.so/90690a9e0df247a7aef73ae953624c67" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--1"><a class="Anchor" href="#https://www.notion.so/90690a9e0df247a7aef73ae953624c67"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">简介</span></span></h1><blockquote id="https://www.notion.so/e260f6831c494081a6f6c82e125edd0b" class="ColorfulBlock ColorfulBlock--ColorDefault Quote"><span class="SemanticStringArray"><span class="SemanticString">使用通信(channel)来共享内存，而不是通过共享内存来通信</span></span></blockquote><div id="https://www.notion.so/623343d61d474cc28b08875c6dae1d4e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">channel 可以用于实现一个生产者消费者模型，用于生产者和消费者之间共享数据</span></span></p></div><div id="https://www.notion.so/685d2c3689834d4c9427e0ff7dde6279" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fs3-us-west-2.amazonaws.com%2Fsecure.notion-static.com%2F2a1fa1f5-d64f-45f5-9d9f-b2c513e17cfa%2FUntitled.png?width=1706&amp;table=block&amp;id=685d2c36-8983-4d4c-9427-e0ff7dde6279"><img src="https://www.notion.so/signed/https%3A%2F%2Fs3-us-west-2.amazonaws.com%2Fsecure.notion-static.com%2F2a1fa1f5-d64f-45f5-9d9f-b2c513e17cfa%2FUntitled.png?width=1706&amp;table=block&amp;id=685d2c36-8983-4d4c-9427-e0ff7dde6279" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/f0c81f09bb4f4089a426d2245e3a7a5d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">日常使用中，我们可以用来做 goruntine 的同步，channel 使用简单效果可靠，下面来看看如何 channel 吧</span></span></p></div><h1 id="https://www.notion.so/6c9f0a079541462db11a00fada9e3969" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--1"><a class="Anchor" href="#https://www.notion.so/6c9f0a079541462db11a00fada9e3969"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">初始化</span></span></h1><div id="https://www.notion.so/2f28ea30dec14469a2240bbf6973c3af" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">使用 make 来初始化一个 channel，channel 支持多种类型元素</span></span></p></div><blockquote id="https://www.notion.so/662c89788142454fac4244dc710506b2" class="ColorfulBlock ColorfulBlock--ColorDefault Quote"><span class="SemanticStringArray"><span class="SemanticString">除了 channel 以外，make 还可以用来初始化 slice、map</span></span></blockquote><pre id="https://www.notion.so/a73a8d93841d4447bacc9a86c4a075e5" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>ch1 := make(chan int, 3) // 初始化一个大小为 3 的 channel
+ch2 := make(chan int)    // 初始化一个无缓冲的 channel</span></span></span></code></pre><div id="https://www.notion.so/8fa009b0923447d8b65fc1b3c4c12b39" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">channel 根据我们初始化的大小分为有缓冲 channel 和无缓冲 channel</span></span></p></div><div id="https://www.notion.so/0e8bf1cfb28e4f239b605f619088c4d4" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">有缓冲 channel</strong></span></span></p></div><div id="https://www.notion.so/70733f4f58cc4292b5f579805cb56fcb" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fs3-us-west-2.amazonaws.com%2Fsecure.notion-static.com%2F61dd0dd3-79a3-4e44-ab24-68b8d43fe1e3%2FUntitled.png?width=1730&amp;table=block&amp;id=70733f4f-58cc-4292-b5f5-79805cb56fcb"><img src="https://www.notion.so/signed/https%3A%2F%2Fs3-us-west-2.amazonaws.com%2Fsecure.notion-static.com%2F61dd0dd3-79a3-4e44-ab24-68b8d43fe1e3%2FUntitled.png?width=1730&amp;table=block&amp;id=70733f4f-58cc-4292-b5f5-79805cb56fcb" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/6dc393e2155544db8728dc2464c79a14" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">这种 channel，就相当于生产者消费者模型里面的缓冲队列，在这里我们初始化了大小为 3 的队列。</span></span></p></div><div id="https://www.notion.so/fed6a48796ec479e95be7123b525c319" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">这种有缓冲队列的最大特点是</span><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">异步</strong></span><span class="SemanticString">，生产者和消费者之间不必同步执行。但是也会引起阻塞：</span></span></p></div><ul class="BulletedListWrapper"><li id="https://www.notion.so/c2ee03ee56724fb98450bfe0fcacea62" class="BulletedList"><span class="SemanticStringArray"><span class="SemanticString">队列满时生产者阻塞</span></span></li><li id="https://www.notion.so/9db011f18c734b7f8dd405b67d0d3ac0" class="BulletedList"><span class="SemanticStringArray"><span class="SemanticString">队列空时消费者阻塞</span></span></li></ul><div id="https://www.notion.so/9ff73cbd70d8456f820ac31e943e1a12" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">队列未满且存有一定数据的时候，生产者和消费者可以各司其职的完成存取。</span></span></p></div><div id="https://www.notion.so/571d2e581f7d4b06a15eb50c83c882f8" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">举一个生活中的例子，有缓冲的 channel 相当于信箱，信箱未满的时候邮差直接把信件放到信箱里面就行了，而我们可以随时去检查信箱取出信件。（这里其实不太准确，日常生活中我们检查如果空信箱的话直接走掉了，但是程序中如果 channel 是空的话等待的 goroutine 是会被阻塞的，举这个例子只是为了突出异步的特点。）</span></span></p></div><div id="https://www.notion.so/98aea040164d479891b062b74b78646e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">无缓冲 channel</strong></span></span></p></div><div id="https://www.notion.so/a868345a06b84931ae016f76f0b335f4" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fs3-us-west-2.amazonaws.com%2Fsecure.notion-static.com%2Fd027bf46-2c07-42db-ba57-240f594948dd%2FUntitled.png?width=1722&amp;table=block&amp;id=a868345a-06b8-4931-ae01-6f76f0b335f4"><img src="https://www.notion.so/signed/https%3A%2F%2Fs3-us-west-2.amazonaws.com%2Fsecure.notion-static.com%2Fd027bf46-2c07-42db-ba57-240f594948dd%2FUntitled.png?width=1722&amp;table=block&amp;id=a868345a-06b8-4931-ae01-6f76f0b335f4" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/825110b0b7964815a2f7f0a039743a4d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">这种情况的消费者和生产者是</span><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">同步</strong></span><span class="SemanticString">的，同步指的是要求双方都准备好才能进行下一步。生产者生产数据后阻塞到数据被取走，而消费者获取数据之前也是阻塞在尝试获取的状态。下面这张图更加形象：</span></span></p></div><div id="https://www.notion.so/25543cae478f4e9b82d01e4bcb9f68b6" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fs3-us-west-2.amazonaws.com%2Fsecure.notion-static.com%2Fba418f76-0195-47b0-8dd9-fd8a06aae594%2FUntitled.png?width=1112&amp;table=block&amp;id=25543cae-478f-4e9b-82d0-1e4bcb9f68b6"><img src="https://www.notion.so/signed/https%3A%2F%2Fs3-us-west-2.amazonaws.com%2Fsecure.notion-static.com%2Fba418f76-0195-47b0-8dd9-fd8a06aae594%2FUntitled.png?width=1112&amp;table=block&amp;id=25543cae-478f-4e9b-82d0-1e4bcb9f68b6" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/96fd34fd6c744957b3a203f08b1bfc60" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">还是信箱的例子，无缓冲的 channel 相当于没有信箱了，快递员和收件人必须同时准备好才能结束发件和收件的动作。</span></span></p></div><div id="https://www.notion.so/2b9e5eacdcc1486dbedd4afced934ece" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">开发中如果我们使用无缓冲 channel，务必要小心死锁的情况</span></span></p></div><pre id="https://www.notion.so/29f9a786bd0a4a2ea25c68ff9f2df9c1" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>func TestChannel(t *testing.T) {
+	ch2 := make(chan int)
+	ch2 &lt;- 1
+	fmt.Println(&lt;-ch2)
+}</span></span></span></code></pre><div id="https://www.notion.so/2d54a21de18643f28c137f0b8a6574f7" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">这种情况运行后是会发生死锁的</span></span></p></div><div id="https://www.notion.so/915d3f00b9c0422e97873a72e408a278" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">fatal error: all goroutines are asleep - deadlock!</code></span></span></p></div><div id="https://www.notion.so/137d0a2da46d4be5b26e7b4094390a38" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">正确的写法是使用 goroutine 提前准备好接收：</span></span></p></div><pre id="https://www.notion.so/bd869f7e5dfe41cdb36d4bed0c89a5b4" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>func TestChannel(t *testing.T) {
+	ch2 := make(chan int)
+	go func() {
+		fmt.Println(&lt;-ch2)
+	}()
+	ch2 &lt;- 1
+}</span></span></span></code></pre><div id="https://www.notion.so/36cdc8e3d66e44e082a5a62335e40dc4" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">另外需要注意的是，我们需要提前准备好接收，不然还是会死锁</span></span></p></div><pre id="https://www.notion.so/384e394c53454ac3b8c2c8eb2c1a40e1" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>func TestChannel(t *testing.T) {
+	ch2 := make(chan int)
+	ch2 &lt;- 1 // 提前发送, deadlock
+	go func() {
+		fmt.Println(&lt;-ch2)
+	}()
+}</span></span></span></code></pre><h1 id="https://www.notion.so/57342cba1e6b480abfe0d218bdf31d01" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--1"><a class="Anchor" href="#https://www.notion.so/57342cba1e6b480abfe0d218bdf31d01"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">channel 的使用</span></span></h1><h2 id="https://www.notion.so/e4d3d196c9af4e668babb511f4673d98" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--2"><a class="Anchor" href="#https://www.notion.so/e4d3d196c9af4e668babb511f4673d98"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">遍历</span></span></h2><div id="https://www.notion.so/d90581524faf4cb592d95e4ef746c28b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">遍历有两种方式</span></span></p></div><pre id="https://www.notion.so/40897a07ab1f4db6a3b9fee9f6b89f66" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>func TestFor(t *testing.T) {
+	ch1 := make(chan int, 100)
+	for i := 0; i &lt; 100; i++ {
+		ch1 &lt;- i
+	}
+	
+	// 方式一, 用 for 取出所有元素，建议使用
+	for i := range ch1 {
+		fmt.Println(i)
+	}
+	fmt.Println(&quot;-&quot;)
+
+	// 方式二
+	for {
+		i, ok := &lt;-ch1 // 通道关闭后再取值ok=false
+		if !ok {
+			break
+		}
+		fmt.Println(i)
+	}
+}</span></span></span></code></pre><div id="https://www.notion.so/d6805f42a4af4a43a422dace1c13a262" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">推荐使用方式一，简单又清晰</span></span></p></div><h2 id="https://www.notion.so/c4e39751adae46e5a2178a09bb7cf92e" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--2"><a class="Anchor" href="#https://www.notion.so/c4e39751adae46e5a2178a09bb7cf92e"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">select</span></span></h2><div id="https://www.notion.so/6a3aa8f30d954d5f908906f63061f90e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">搭配 select 是的我们在遍历 channel 的时候可以进行选择性操作，例如下面的例子：</span></span></p></div><pre id="https://www.notion.so/c32d2b2b128846e3b1872cbfb6552d0b" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>func fibonacci(c, quit chan int) {
+	x, y := 0, 1
+	for {
+		select {
+		case c &lt;- x:
+			x, y = y, x+y
+		case &lt;-quit:
+			fmt.Println(&quot;quit&quot;)
+			return
+		}
+	}
+}
+
+func TestSelect(t *testing.T) {
+	c := make(chan int)
+	quit := make(chan int)
+	go func() {
+		for i := 0; i &lt; 10; i++ {
+			fmt.Println(&lt;-c)
+		}
+		quit &lt;- 0
+	}()
+	fibonacci(c, quit)
+}
+// output:
+//0
+//1
+//1
+//2
+//3
+//5
+//8
+//13
+//21
+//34
+//quit</span></span></span></code></pre><div id="https://www.notion.so/87355beea8a0476582237ed14f56aaae" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">上面的例子中，我们启动了一个 goruntine，读取 c 中前 10 个元素，然后我们调用 fibonacci，它执行了一个</span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">for … select</code></span><span class="SemanticString"> 的操作，第一个 select 不断往 c 中写入，第二个 select 从 quit 中读取，一旦从 quit 中获取到元素后，就退出循环</span></span></p></div><div id="https://www.notion.so/3b8ede40f8544331ab437e44a039b5b9" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">而在外部，我们成功获取到了 fibonacci 数，可以看到 select 的使用和 Go 简单易用且强大的并发能力。</span></span></p></div><div id="https://www.notion.so/0cca82dbfe8440d0ab4484719ccdf4a5" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">进阶：超时 channel</strong></span></span></p></div><pre id="https://www.notion.so/1d3821ebda7f4d1d8d4f80af88f31162" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>func TestTimeout(t *testing.T) {
+	c1 := make(chan string, 1)
+	go func() {
+		time.Sleep(time.Second * 2)
+		c1 &lt;- &quot;result 1&quot;
+	}()
+	select {
+	case res := &lt;-c1:
+		fmt.Println(res)
+	case &lt;-time.After(time.Second * 1):
+		fmt.Println(&quot;timeout 1&quot;)
+	}
+}
+// output:
+// timeout 1
+
+func After(d Duration) &lt;-chan Time {
+	return NewTimer(d).C
+}</span></span></span></code></pre><div id="https://www.notion.so/e102d6edff50441b904d6924de1e8800" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">我们通过计时器和 select，可以完成定时任务，比如说上面的代码，我们调用After获取到一个 </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">&lt;-chan</code></span><span class="SemanticString">，触发了相应的 case，终止了 select</span></span></p></div><div id="https://www.notion.so/0a16c838150845eeb9f72da730f6310e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">上面的思想可以扩展到在某时刻 or 某条件下做相应操作的功能</span></span></p></div><h2 id="https://www.notion.so/3a1d7f8ace3b40c6b1913852f126e673" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--2"><a class="Anchor" href="#https://www.notion.so/3a1d7f8ace3b40c6b1913852f126e673"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">通道的限制</span></span></h2><div id="https://www.notion.so/90bd77dbd70946faacfa6798f65482fa" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">有的时候我们需要限制通道的读写，那么我们可以提前声明通道的类型，这种通道称为单向通道，特点是限制了写入或者读取的操作：</span></span></p></div><pre id="https://www.notion.so/ad19acae073f4f2083b0c1e21c853c9f" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>func op(writer &lt;-chan int, reader chan&lt;- int) {
+	for data := range writer{
+		reader &lt;- data
+	}
+}</span></span></span></code></pre><h2 id="https://www.notion.so/e7f29620d1ac4e8f855a7e5ded4335b1" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--2"><a class="Anchor" href="#https://www.notion.so/e7f29620d1ac4e8f855a7e5ded4335b1"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">通道的关闭和异常</span></span></h2><div id="https://www.notion.so/b74f899ec8ef40d7839bfea00c62b3fb" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">使用 </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">close()</code></span><span class="SemanticString"> 函数可以关闭一个通道，如果我们确认通道不再读写，那么记得及时关闭</span></span></p></div><pre id="https://www.notion.so/33ad5d92f7d74ce994194d8fd06edf66" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>func TestClose(t *testing.T) {
+	ch := make(chan int, 10)
+	defer func(){
+		close(ch)
+	}()
+	// do something ... 
+}</span></span></span></code></pre><div id="https://www.notion.so/23c3917e30554853b30791cd7795adca" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">这里我们会好奇，对已经关闭的通道读写会有什么影响？这里也是面试会经常问到的，我们自己实验一下看看会有什么结果：</span></span></p></div><div id="https://www.notion.so/409cceac27fd4b548f2a7e553fdf0597" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">首先我们根据缓冲类型分为无缓冲 channel 和有缓冲 channel 实验：</span></span></p></div><div id="https://www.notion.so/32faa0cec89f40c68dbbdf4772420351" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">无缓冲 channel</strong></span></span></p></div><div id="https://www.notion.so/ab726d247c7845f1ad0379c70c18eabb" class="ColumnList"><div id="https://www.notion.so/46b837d1971a48d382258e0faaf40022" class="Column" style="width:calc((100% - var(--column-spacing) * 1) * 0.5)"><pre id="https://www.notion.so/7d246defc0564658910a9d0cde1df1dd" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>// 无缓冲 channel，读
+func TestClose(t *testing.T) {
+	ch := make(chan int)
+	close(ch)
+	fmt.Println(&lt;-ch) // 0
+}</span></span></span></code></pre></div><div id="https://www.notion.so/fcb1b8cd2d8e45d996b0dcfc338534cb" class="Column" style="width:calc((100% - var(--column-spacing) * 1) * 0.5)"><pre id="https://www.notion.so/3df1f5bde6a84289b5a68246b484e328" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>// 无缓冲 channel，写
+func TestClose(t *testing.T) {
+	ch := make(chan int)
+	close(ch)
+	ch &lt;- 0 // panic: send on closed channel
+}</span></span></span></code></pre></div></div><div id="https://www.notion.so/769ff341d33d4296adeec9009931dfe0" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">读会读取到零值，而写会 panic</span></span></p></div><div id="https://www.notion.so/29bddcf3c289412f92713974a395a2c8" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">有缓冲 channel</strong></span></span></p></div><div id="https://www.notion.so/8ae971bfa57946e29eb272cd9f4c7832" class="ColumnList"><div id="https://www.notion.so/d55959d4f8854940a63d276ead993bc5" class="Column" style="width:calc((100% - var(--column-spacing) * 1) * 0.5)"><pre id="https://www.notion.so/72cc090d9b0043dfb058bfa9adb09081" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>// 有缓冲 channel, 无写入值， 读
+func TestClose(t *testing.T) {
+	ch := make(chan int, 10)
+	close(ch)
+	fmt.Println(&lt;-ch) // 0
+}</span></span></span></code></pre><pre id="https://www.notion.so/0c8c60b5b74948819238870da45b26e4" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>// 有缓冲 channel，有写入值，读
+func TestClose(t *testing.T) {
+	ch := make(chan int, 10)
+	for i := 1; i &lt;= 10; i++ {
+		ch &lt;- i
+	}
+	close(ch)
+	for i := range ch {
+		fmt.Println(i) // 输出 1 到 10
+	}
+	fmt.Println(&lt;-ch) // 输出 0
+}</span></span></span></code></pre></div><div id="https://www.notion.so/94bd95f862214071b9c7516e712d029e" class="Column" style="width:calc((100% - var(--column-spacing) * 1) * 0.5)"><pre id="https://www.notion.so/ae806d40e8b243348a25f0280c5d1cbb" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>// 有缓冲 channel, 写
+func TestClose(t *testing.T) {
+	ch := make(chan int, 10)
+	close(ch)
+	ch &lt;- 1 // panic: send on closed channel
+}</span></span></span></code></pre><div id="https://www.notion.so/0998051dc7d0458e9243be223ef0e5a7" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div></div></div><div id="https://www.notion.so/2d845ee18bf943b4849a35fbd5e382a7" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">可以看到有缓冲 channel 的行为读取的时候，如果有预留值则读取预留值，没有则读取到零值，写同样会 panic</span></span></p></div><div id="https://www.notion.so/0b87b316e27d4b4797dbb20bcb863d3e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">而我们再次 </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">close</code></span><span class="SemanticString"> 的话，不管有无缓冲，都会提示我们 </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">panic: close of closed channel</code></span></span></p></div><div id="https://www.notion.so/b68ba900a5474eb78d370f6f06c19a0b" class="Divider"></div><div id="https://www.notion.so/e03be0544af34a04b048e42f8add8513" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">现在我们可以总结了，从</span><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">已经关闭的 channel 里面操作</strong></span><span class="SemanticString">：</span></span></p></div><div><div></div><div></div><div></div><div></div></div><div id="https://www.notion.so/c4f7c1e837b445a1bdeea2b8a1153d82" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">如果是 nil 的 channel 呢？</span></span></p></div><div id="https://www.notion.so/afd54de394b040758aab8e036d5852ac" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">我们依次尝试读，写，close，发现都是 panic</span></span></p></div><pre id="https://www.notion.so/e8ddac098105429fb19ca9844ac7802e" class="Code"><code><span class="SemanticStringArray"><span class="SemanticString"><span>func TestClose(t *testing.T) {
+	ch := make(chan int, 1)
+	ch = nil
+	fmt.Println(&lt;-ch) // fatal error: all goroutines are asleep - deadlock!
+	ch &lt;- 1           // fatal error: all goroutines are asleep - deadlock!
+	close(ch)         // panic: close of nil channel
+}</span></span></span></code></pre><div id="https://www.notion.so/a88f0d5c96df402c8521316bca359594" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">那么我们可以进一步总结：</span></span></p></div><div><div></div><div></div><div></div><div></div></div><h1 id="https://www.notion.so/c84cfefbf8ca4a96bd46fe50c45a897a" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--1"><a class="Anchor" href="#https://www.notion.so/c84cfefbf8ca4a96bd46fe50c45a897a"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">源码分析</span></span></h1><div id="https://www.notion.so/f056be6e6f0242f596b56c72d5e3eaa4" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://juejin.cn/post/6844904016254599176#heading-7">深入理解Golang之channel - 掘金 (juejin.cn)</a></span><span class="SemanticString"> 这篇文章分析得非常好，我先学习一下，后面再补充</span></span></p></div><div id="https://www.notion.so/62e029089d764c5dab213ca1e2dcacad" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><h1 id="https://www.notion.so/20ded407864f4db1b7509688e9332926" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--1"><a class="Anchor" href="#https://www.notion.so/20ded407864f4db1b7509688e9332926"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Ref</span></span></h1><div id="https://www.notion.so/b06f46a1095144958ffed7d1d4833f22" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://www.runoob.com/w3cnote/go-channel-intro.html">Go Channel 详解 | 菜鸟教程 (runoob.com)</a></span></span></p></div><div id="https://www.notion.so/259bb75df16a43e7874074405c95f05d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://juejin.cn/post/6844904016254599176">深入理解Golang之channel - 掘金 (juejin.cn)</a></span></span></p></div><div id="https://www.notion.so/b2cd90d3d8294d638552942aa6bf9af5" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://www.topgoer.com/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/channel.html">Channel · Go语言中文文档 (topgoer.com)</a></span></span></p></div><div id="https://www.notion.so/4ad9e53ff37b4e279fa904f585cabf65" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div></article>
+  <footer class="Footer">
+  <div>&copy; Notablog 2022</div>
+  <div>&centerdot;</div>
+  <div>Powered by <a href="https://github.com/dragonman225/notablog" target="_blank"
+      rel="noopener noreferrer">Notablog</a>.
+  </div>
+</footer>
+</body>
+
+</html>
