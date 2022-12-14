@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://hhmy27.github.io/
+
+# Sitemaps
+Sitemap: https://hhmy27.github.io/sitemap.xml
