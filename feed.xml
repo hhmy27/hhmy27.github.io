@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+    <channel>
+        <title>hhmy 的博客</title>
+        <link>https://hhmy27.github.io//</link>
+        <description>test</description>
+        <lastBuildDate>Wed, 14 Dec 2022 10:10:36 GMT</lastBuildDate>
+        <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
+        <generator>https://github.com/jpmonette/feed</generator>
+        <language>zh-CN</language>
+        <copyright>All rights reserved 2022, hhmy </copyright>
+        <item>
+            <title><![CDATA[test]]></title>
+            <link>https://hhmy27.github.io//test</link>
+            <guid>https://hhmy27.github.io//test</guid>
+            <pubDate>Wed, 14 Dec 2022 00:00:00 GMT</pubDate>
+            <content:encoded><![CDATA[<main class="notion light-mode notion-page notion-block-586d79832a0e47eeb80c2800696255da"><div class="notion-viewport"></div><div class="notion-text notion-block-95c6fe32af6a44a4b20ddcca77a7056a">test test</div><div class="notion-blank notion-block-e378566640dc465b93dd5f03280271f3"> </div></main>]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[hello world]]></title>
+            <link>https://hhmy27.github.io//hello</link>
+            <guid>https://hhmy27.github.io//hello</guid>
+            <pubDate>Tue, 13 Dec 2022 00:00:00 GMT</pubDate>
+            <content:encoded><![CDATA[<main class="notion light-mode notion-page notion-block-baa9bf33a11f4da580eb7930448aaad1"><div class="notion-viewport"></div><div class="notion-text notion-block-963fa34ae8e344b6a066206d0e7cb2c5">test</div><pre class="notion-code language-go"><code class="language-go"><span class="token keyword">for</span> i<span class="token punctuation">,</span> <span class="token literal-property property">ch</span> <span class="token operator">:</span><span class="token operator">=</span> range s<span class="token punctuation">{</span>
+	fmt<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span>i <span class="token operator">+</span> <span class="token string">" "</span> <span class="token operator">+</span> ch<span class="token punctuation">)</span>
+<span class="token punctuation">}</span></code></pre></main>]]></content:encoded>
+        </item>
+    </channel>
+</rss>
